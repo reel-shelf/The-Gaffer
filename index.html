@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Gaffer — FC 26 Career Mode Assistant</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0e1a">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e1a; --panel:#121829; --panel2:#1a2238; --line:#263052;
+    --text:#eef1f8; --muted:#8e98b3; --accent:#f5b301; --accent2:#5cc8ff; --ink:#1a1200; --warn:#ffb648; --bad:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;font-size:15px}
+  header{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,#0a0e1a 70%,rgba(10,14,26,.88));padding:14px 16px 0;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:10px}
+  .badge{width:36px;height:36px;border-radius:9px;background:var(--accent);color:var(--ink);display:grid;place-items:center;font-family:'Barlow Condensed';font-weight:800;font-size:20px}
+  h1{font-family:'Barlow Condensed';font-weight:800;font-size:26px;margin:0;letter-spacing:.5px;text-transform:uppercase}
+  .sub{color:var(--muted);font-size:12px;margin-top:-2px}
+  nav{display:flex;gap:4px;margin-top:12px;overflow-x:auto}
+  nav button{flex:1;background:none;border:0;color:var(--muted);padding:10px 6px;font:600 14px Inter;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+  nav button.on{color:var(--text);border-color:var(--accent)}
+  main{max-width:760px;margin:0 auto;padding:16px}
+  section{display:none} section.on{display:block}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  label{display:block;font-size:12px;color:var(--muted);margin:0 0 5px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  input,select,textarea{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:15px Inter}
+  textarea{resize:vertical;min-height:80px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .btn{background:var(--accent);color:var(--ink);border:0;border-radius:10px;padding:12px 16px;font:700 15px Inter;cursor:pointer;width:100%}
+  .btn.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+  .btn:disabled{opacity:.5}
+  .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px}
+  .chip{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:99px;padding:7px 13px;font:600 13px Inter;white-space:nowrap;cursor:pointer}
+  .chip.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
+  .player{display:grid;grid-template-columns:50px 1fr auto;gap:12px;align-items:center;padding:12px;border-bottom:1px solid var(--line)}
+  .player:last-child{border:0}
+  .pot{font-family:'Barlow Condensed';font-weight:800;font-size:26px;text-align:center;line-height:1;background:var(--panel2);border-radius:10px;padding:7px 0}
+  .pot small{display:block;font:600 9px Inter;color:var(--muted);letter-spacing:.5px;margin-top:2px}
+  .name{font-weight:600}
+  .meta{color:var(--muted);font-size:13px;margin-top:2px}
+  .pos{display:inline-block;font:700 11px Inter;padding:2px 6px;border-radius:5px;margin-right:6px;color:var(--ink)}
+  .growth{text-align:right;font-size:12px;color:var(--muted)}
+  .growth b{display:block;font-family:'Barlow Condensed';font-size:20px;color:var(--accent2)}
+  .ask{background:none;border:1px solid var(--line);color:var(--accent);border-radius:8px;padding:4px 8px;font:600 11px Inter;margin-top:4px;cursor:pointer}
+  .count{color:var(--muted);font-size:13px;margin:4px 2px 8px}
+  .chat{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+  .msg{padding:12px 14px;border-radius:14px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word}
+  .msg.me{background:var(--panel2);align-self:flex-end;max-width:88%}
+  .msg.ai{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent)}
+  .msg img{max-width:100%;border-radius:8px;margin-bottom:6px;display:block}
+  .msg .who{font:700 11px Inter;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+  .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+  .thumbs div{position:relative}
+  .thumbs img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+  .thumbs button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:var(--bad);color:#fff;font-weight:700;cursor:pointer}
+  .upload{display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--line);border-radius:10px;padding:14px;color:var(--muted);cursor:pointer;font-weight:600}
+  .quick{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+  .quick button{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:99px;padding:7px 12px;font:500 13px Inter;cursor:pointer}
+  .note{color:var(--muted);font-size:12px;line-height:1.5}
+  .off{background:#2a1d10;border:1px solid #5a3b14;color:var(--warn);padding:12px;border-radius:10px;font-size:13px;display:none}
+  h2{font-family:'Barlow Condensed';font-weight:700;font-size:20px;text-transform:uppercase;margin:0 0 10px;letter-spacing:.4px}
+  .tip{padding:10px 0;border-bottom:1px solid var(--line);line-height:1.5}
+  .tip:last-child{border:0}
+  .tip b{color:var(--accent2)}
+  .saved{color:var(--accent);font-size:13px;margin-top:8px;min-height:18px}
+  .seasonbar{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#1d2a52,#121829);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+  .seasonbar .big{font-family:'Barlow Condensed';font-weight:800;font-size:30px;line-height:1}
+  .seasonbar .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+  .seasonbar .pts{color:var(--accent)}
+  .prog{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:10px 0 2px}
+  .prog div{height:100%;background:linear-gradient(90deg,var(--accent),#ffd866);transition:width .3s}
+  .obj{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+  .obj:last-child{border:0}
+  .obj input{width:22px;height:22px;accent-color:var(--accent);margin:0}
+  .obj.done .ot{text-decoration:line-through;color:var(--muted)}
+  .ot{line-height:1.4}
+  .tag{display:inline-block;font:700 10px Inter;padding:2px 6px;border-radius:5px;margin-top:4px;text-transform:uppercase;letter-spacing:.4px}
+  .t-easy{background:#163a2c;color:#5ce0a0}.t-medium{background:#1c3050;color:#5cc8ff}.t-hard{background:#4a1e28;color:#ff8a9a}.t-fun{background:#3a2a55;color:#c9a8ff}
+  .op{font-family:'Barlow Condensed';font-weight:700;font-size:18px;color:var(--accent);text-align:right}
+  .op button{display:block;background:none;border:0;color:var(--muted);font-size:12px;cursor:pointer;margin-left:auto}
+  .hist{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .hist:last-child{border:0}
+  .grade{font-family:'Barlow Condensed';font-weight:800;font-size:20px;color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="badge">G</div>
+    <div><h1>The Gaffer</h1><div class="sub">FC 26 Career Mode assistant manager</div></div>
+  </div>
+  <nav>
+    <button data-tab="assistant" class="on">Assistant</button>
+    <button data-tab="scout">Scout</button>
+    <button data-tab="objectives">Objectives</button>
+    <button data-tab="club">My Club</button>
+    <button data-tab="tips">Tips</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ASSISTANT -->
+  <section id="assistant" class="on">
+    <div class="card" id="keyCard" style="display:none;border-color:var(--accent)">
+      <h2>Switch on your assistant</h2>
+      <p class="note" style="font-size:14px;color:var(--text)">The assistant runs on Google Gemini's free tier. Set it up once:</p>
+      <ol class="note" style="font-size:14px;color:var(--text);padding-left:20px;line-height:1.7">
+        <li>Open <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--accent)">aistudio.google.com/apikey</a> and sign in with Google.</li>
+        <li>Tap <b>Create API key</b> and copy it.</li>
+        <li>Paste it here and tap Save.</li>
+      </ol>
+      <input id="k_input" type="password" placeholder="Paste your Gemini key" autocomplete="off">
+      <div style="height:8px"></div>
+      <button class="btn" id="k_save">Save key</button>
+      <div class="saved" id="k_msg"></div>
+      <p class="note">Free, no card needed. Your key stays on this phone.</p>
+    </div>
+    <div class="chat" id="chat">
+      <div class="msg ai"><div class="who">Assistant Manager</div>Boss, send me a screenshot: your squad, player stats, the transfer budget, the league table, or a match result. Tell me what you need and I'll give you a plan. Fill in My Club first so I know who we are.</div>
+    </div>
+    <div class="card">
+      <div class="quick" id="quick">
+        <button>Rate my squad</button>
+        <button>Who should I sell?</button>
+        <button>Best signings for my budget</button>
+        <button>Fix my tactics</button>
+        <button>Which youth players to promote?</button>
+      </div>
+      <label class="upload" for="file">📷 Add screenshots</label>
+      <input type="file" id="file" accept="image/*" multiple hidden>
+      <div class="thumbs" id="thumbs"></div>
+      <textarea id="q" placeholder="e.g. We lost 3–0 at home. Here's my lineup. What's going wrong?"></textarea>
+      <div style="height:10px"></div>
+      <button class="btn" id="send">Ask the assistant</button>
+      <div style="height:8px"></div>
+      <button class="btn ghost" id="clear">New conversation</button>
+    </div>
+  </section>
+
+  <!-- SCOUT -->
+  <section id="scout">
+    <div class="card">
+      <input id="search" placeholder="Search player or club">
+      <div style="height:10px"></div>
+      <div class="chips" id="posChips"></div>
+      <div class="row">
+        <div><label>Sort by</label>
+          <select id="sort"><option value="pot">Potential</option><option value="growth">Growth room</option><option value="ovr">Overall now</option><option value="age">Youngest</option></select></div>
+        <div><label>Min potential</label>
+          <select id="minPot"><option>80</option><option>84</option><option>86</option><option>88</option></select></div>
+      </div>
+    </div>
+    <div class="count" id="count"></div>
+    <div class="card" style="padding:0" id="list"></div>
+    <p class="note">Ratings are launch ratings for FC 26 Career Mode, compiled from published wonderkid lists (Beebom, FourFourTwo, SI). In-game values change with form and dynamic potential. Tap “Ask about him” to get the assistant's view.</p>
+  </section>
+
+  <!-- OBJECTIVES -->
+  <section id="objectives">
+    <div class="seasonbar">
+      <div><div class="lbl">Current season</div><div class="big" id="o_season">Season 1</div></div>
+      <div style="text-align:right"><div class="lbl">Career points</div><div class="big pts" id="o_total">0</div></div>
+    </div>
+    <div class="card">
+      <h2>This season's objectives</h2>
+      <div class="count" id="o_count" style="margin:0"></div>
+      <div class="prog"><div id="o_prog" style="width:0"></div></div>
+      <div id="o_list"></div>
+    </div>
+    <div class="card">
+      <h2>Get objectives</h2>
+      <label>Difficulty</label>
+      <div class="chips" id="o_diff"></div>
+      <button class="btn" id="o_draw">🎲 Draw 5 random objectives</button>
+      <div style="height:8px"></div>
+      <button class="btn ghost" id="o_ai">Let the assistant set objectives for my club</button>
+      <div class="saved" id="o_msg"></div>
+      <label style="margin-top:6px">Add your own</label>
+      <div style="display:grid;grid-template-columns:1fr 90px;gap:8px">
+        <input id="o_custom" placeholder="e.g. Win the FA Cup">
+        <select id="o_custompts"><option value="10">10 pts</option><option value="25" selected>25 pts</option><option value="50">50 pts</option></select>
+      </div>
+      <div style="height:8px"></div>
+      <button class="btn ghost" id="o_add">Add objective</button>
+    </div>
+    <div class="card">
+      <button class="btn" id="o_end">🏁 End season and start the next one</button>
+      <p class="note">Ending a season grades it on the points you earned, saves it to your history, and gives you a fresh slate.</p>
+    </div>
+    <div class="card">
+      <h2>Season history</h2>
+      <div id="o_hist"><div class="note">No finished seasons yet.</div></div>
+    </div>
+  </section>
+
+  <!-- CLUB -->
+  <section id="club">
+    <div class="card">
+      <h2>My Save</h2>
+      <div class="row">
+        <div><label>Club</label><input id="c_club" placeholder="e.g. Sunderland"></div>
+        <div><label>Season</label><input id="c_season" placeholder="2025/26"></div>
+      </div>
+      <div style="height:10px"></div>
+      <div class="row">
+        <div><label>Transfer budget</label><input id="c_budget" placeholder="£25M"></div>
+        <div><label>Wage budget / wk</label><input id="c_wage" placeholder="£400K"></div>
+      </div>
+      <div style="height:10px"></div>
+      <div class="row">
+        <div><label>Formation</label><input id="c_form" placeholder="4-3-3"></div>
+        <div><label>Board goal</label><input id="c_goal" placeholder="Avoid relegation"></div>
+      </div>
+      <div style="height:10px"></div>
+      <label>Style I want</label>
+      <select id="c_style"><option>Balanced</option><option>High press</option><option>Possession</option><option>Counter-attack</option><option>Direct / long ball</option><option>Youth project</option></select>
+      <div style="height:10px"></div>
+      <label>Squad notes (key players, problems)</label>
+      <textarea id="c_notes" placeholder="Best players, weak positions, who's unhappy, injuries..."></textarea>
+      <div style="height:10px"></div>
+      <button class="btn" id="saveClub">Save</button>
+      <div class="saved" id="savedMsg"></div>
+      <p class="note">Saved on this device only. The assistant reads these details with every question.</p>
+    </div>
+    <div class="card">
+      <h2>Assistant AI</h2>
+      <div class="note" id="k_status" style="font-size:14px;color:var(--text);margin-bottom:10px"></div>
+      <label>Gemini API key</label>
+      <input id="k_input2" type="password" placeholder="Paste a new key" autocomplete="off">
+      <div style="height:8px"></div>
+      <div class="row"><button class="btn" id="k_save2">Save key</button><button class="btn ghost" id="k_remove">Remove key</button></div>
+      <div class="saved" id="k_msg2"></div>
+      <p class="note">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--accent)">aistudio.google.com/apikey</a>. The free tier has daily limits, and Google may use free-tier requests to improve its products.</p>
+    </div>
+  </section>
+
+  <!-- TIPS -->
+  <section id="tips">
+    <div class="card">
+      <h2>Wonderkid growth</h2>
+      <div class="tip"><b>Play them.</b> Young players grow fastest with regular starts. A wonderkid on the bench barely develops; loan him out if you can't start him.</div>
+      <div class="tip"><b>Watch dynamic potential.</b> Good form raises potential and poor form lowers it. Check a player's potential every few months.</div>
+      <div class="tip"><b>Training matters.</b> Use development plans to push the attributes for his best position, and keep sharpness high.</div>
+      <div class="tip"><b>Scout smart.</b> Set your scouts to young players and look for “Exciting Prospect” or “Showing Great Potential”.</div>
+    </div>
+    <div class="card">
+      <h2>Transfers</h2>
+      <div class="tip"><b>Buy early, sell high.</b> Sign prospects in season one, before their value climbs, and sell players past their peak while they still have value.</div>
+      <div class="tip"><b>Use sell-on clauses.</b> When you sell a youngster you can't play, add a sell-on clause to profit later.</div>
+      <div class="tip"><b>Mind the wages.</b> The wage budget often runs out before the transfer budget. Swap some transfer money into wages if needed.</div>
+    </div>
+  </section>
+</main>
+
+<script>
+// ---------- DATA ----------
+const P = [
+ ["Lamine Yamal",18,"RW","Barcelona",null,95],
+ ["Kenan Yildiz",20,"CAM","Juventus",79,89],
+ ["Rodrigo Mora",18,"CAM","Porto",76,89],
+ ["Jorthy Mokio",17,"CDM","Ajax",69,89],
+ ["Antonio Nusa",20,"LM","RB Leipzig",76,88],
+ ["Geovany Quenda",18,"RM","Sporting CP",76,88],
+ ["Rio Ngumoha",17,"LM","Liverpool",68,88],
+ ["Arthur Vermeeren",20,"CM","Marseille (loan)",77,87],
+ ["Ethan Nwaneri",18,"RM","Arsenal",76,87],
+ ["Assane Diao",20,"LM","Como",76,87],
+ ["Julien Duranville",19,"RM","Borussia Dortmund",72,87],
+ ["Charalampos Kostoulas",18,"ST","Brighton",72,87],
+ ["Luka Vuskovic",18,"CB","Hamburg SV (loan)",72,87],
+ ["Assan Ouédraogo",19,"CAM","RB Leipzig",69,87],
+ ["Pablo Garcia",19,"RM","Real Betis",66,87],
+ ["Francesco Camarda",17,"ST","Lecce",65,87],
+ ["Marc Casado",22,"CDM","Barcelona",79,86],
+ ["Samu",21,"ST","Porto",79,86],
+ ["Malick Fofana",20,"LM","Lyon",78,86],
+ ["Archie Gray",19,"CDM","Tottenham",75,86],
+ ["Konstantinos Karetsas",17,"CAM","Genk",70,86],
+ ["Sverre Halseth Nypan",18,"CM","Middlesbrough (loan)",69,86],
+ ["Tygo Land",19,"CM","FC Groningen",68,86],
+ ["Lennart Karl",17,"CAM","Bayern Munich",63,86],
+ ["Yankubah Minteh",21,"RM","Brighton",77,85],
+ ["Martim Fernandes",19,"RB","Porto",75,85],
+ ["Conrad Harder",20,"ST","RB Leipzig",74,85],
+ ["Karim Konate",21,"ST","RB Salzburg",72,85],
+ ["Josh Acheampong",19,"RB","Chelsea",70,85],
+ ["Bazoumana Touré",19,"LM","Hoffenheim",70,85],
+ ["Tidiam Gomis",19,"LM","RB Leipzig",68,85],
+ ["Joane Gadou",18,"CB","RB Salzburg",66,85],
+ ["Diego León",18,"LB","Manchester United",64,85],
+ ["Nico Paz",21,"CAM","Como",79,84],
+ ["Arnau Martínez",22,"RB","Girona",79,84],
+ ["Arne Engels",22,"CM","Celtic",75,84],
+ ["Jonas Urbig",21,"GK","Bayern Munich",74,84],
+ ["Mike Penders",19,"GK","Strasbourg",73,84],
+ ["Luis Guilherme",18,"RM","West Ham",71,84],
+ ["Chris Rigg",18,"CAM","Sunderland",70,84],
+ ["Jerónimo Domina",19,"ST","Unión de Santa Fe",70,84],
+ ["Vitor Reis",19,"CB","Girona",70,84],
+ ["Alex Tóth",19,"CDM","Ferencváros",70,84],
+ ["Jon Martín",19,"CB","Real Sociedad",68,84],
+ ["Said El Mala",19,"LM","FC Köln",68,84],
+ ["Dennis Seimen",19,"GK","SC Paderborn",66,84],
+ ["Chido Obi",17,"ST","Manchester United",65,84],
+ ["Semm Renders",17,"RB","Antwerp",62,84],
+ ["Wilfried Gnonto",21,"RM","Leeds United",74,83],
+ ["Arsen Zakharyan",22,"RM","Real Sociedad",74,83],
+ ["David Odogu",19,"CB","Wolfsburg",65,83]
+].map(([name,age,pos,club,ovr,pot])=>({name,age,pos,club,ovr,pot}));
+
+const GROUP = {GK:"GK",CB:"DEF",LB:"DEF",RB:"DEF",CDM:"MID",CM:"MID",CAM:"MID",LM:"WING",RM:"WING",LW:"WING",RW:"WING",ST:"ATT"};
+const COLOR = {GK:"#ffb648",DEF:"#5ab0ff",MID:"#b48cff",WING:"#5ce0c0",ATT:"#ff7a7a"};
+
+// ---------- TABS ----------
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+function showTab(t){
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x.dataset.tab===t));
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===t));
+  window.scrollTo(0,0);
+}
+
+// ---------- SCOUT ----------
+let posFilter="All";
+const chipsEl=document.getElementById('posChips');
+["All","GK","DEF","MID","WING","ATT"].forEach(p=>{
+  const c=document.createElement('button');c.className='chip'+(p==="All"?' on':'');c.textContent=p;
+  c.onclick=()=>{posFilter=p;[...chipsEl.children].forEach(x=>x.classList.toggle('on',x===c));renderList();};
+  chipsEl.appendChild(c);
+});
+['search','sort','minPot'].forEach(id=>document.getElementById(id).addEventListener('input',renderList));
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function renderList(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const sort=document.getElementById('sort').value;
+  const min=+document.getElementById('minPot').value;
+  let r=P.filter(p=>p.pot>=min&&(posFilter==="All"||GROUP[p.pos]===posFilter)&&(p.name.toLowerCase().includes(q)||p.club.toLowerCase().includes(q)));
+  const g=p=>p.ovr==null?0:p.pot-p.ovr;
+  r.sort((a,b)=>sort==="pot"?b.pot-a.pot:sort==="growth"?g(b)-g(a):sort==="ovr"?(b.ovr||0)-(a.ovr||0):a.age-b.age);
+  document.getElementById('count').textContent=r.length+" prospects";
+  document.getElementById('list').innerHTML=r.map(p=>`
+    <div class="player">
+      <div class="pot">${p.pot}<small>POT</small></div>
+      <div><div class="name">${esc(p.name)}</div>
+        <div class="meta"><span class="pos" style="background:${COLOR[GROUP[p.pos]]}">${p.pos}</span>${esc(p.club)} · ${p.age}y</div>
+        <button class="ask" data-n="${esc(p.name)}">Ask about him</button></div>
+      <div class="growth">${p.ovr==null?'OVR —':'OVR '+p.ovr}<b>${p.ovr==null?'':'+'+(p.pot-p.ovr)}</b>${p.ovr==null?'':'growth'}</div>
+    </div>`).join('')||'<div style="padding:16px" class="note">No players match.</div>';
+  document.querySelectorAll('.ask').forEach(b=>b.onclick=()=>{
+    const p=P.find(x=>x.name===b.dataset.n);
+    showTab('assistant');
+    document.getElementById('q').value=`Should I sign ${p.name} (${p.pos}, ${p.club}, age ${p.age}, POT ${p.pot})? Is he right for my club and budget, and what's a sensible offer? Name 2 alternatives too.`;
+    document.getElementById('q').focus();
+  });
+}
+renderList();
+
+// ---------- CLUB ----------
+const CF=['club','season','budget','wage','form','goal','style','notes'];
+function store(){try{return window.localStorage}catch(e){return null}}
+function loadClub(){try{const d=JSON.parse(store()?.getItem('gaffer_club')||'{}');CF.forEach(k=>{if(d[k])document.getElementById('c_'+k).value=d[k]})}catch(e){}}
+function club(){const d={};CF.forEach(k=>d[k]=document.getElementById('c_'+k).value.trim());return d}
+document.getElementById('saveClub').onclick=()=>{
+  try{store()?.setItem('gaffer_club',JSON.stringify(club()));document.getElementById('savedMsg').textContent='Saved ✓'}
+  catch(e){document.getElementById('savedMsg').textContent='Saved for this visit (this browser won\'t keep it).'}
+  setTimeout(()=>document.getElementById('savedMsg').textContent='',2500);
+};
+loadClub();
+
+// ---------- OBJECTIVES ----------
+const POOL={
+ easy:[["Win 3 league games in a row",10],["Keep 5 clean sheets",10],["Give 3 academy players their debut",10],["Sign a player aged 21 or under",10],["Reach the domestic cup quarter-finals",10],["Score 4+ goals in a single match",10],["Beat a rival home and away",10],["Have 3 different players score 5+ league goals",10]],
+ medium:[["Beat the board's league target",25],["Have a player score 20+ goals in all comps",25],["Make a profit across both transfer windows",25],["Sign a wonderkid with 85+ potential",25],["Go unbeaten at home in the league",25],["Grow one young player by +5 overall",25],["Concede fewer than 35 league goals",25],["Win 10 away games in all comps",25]],
+ hard:[["Win the league",50],["Win a trophy making only 2 signings",50],["Start a 17-year-old in 15+ matches",50],["Sell a player for 3x what you paid",50],["Win a cup final",50],["Go 20 matches unbeaten",50],["Reach the Champions League semi-finals",50]],
+ fun:[["Only sign players from one country",25],["No signing over £10M",25],["Make an academy graduate your captain",25],["Play a different formation every month",10],["Give the No. 10 shirt to a teenager",10],["Sign a free agent who scores 10+ goals",25],["Keep your starting XI average age under 24",25]]
+};
+const DIFF={easy:"Easy",medium:"Medium",hard:"Hard",mixed:"Mixed",fun:"Fun"};
+let oDiff="mixed";
+let O={season:1,total:0,list:[],history:[]};
+try{const d=JSON.parse(store()?.getItem('gaffer_obj')||'null');if(d)O=d}catch(e){}
+function saveO(){try{store()?.setItem('gaffer_obj',JSON.stringify(O))}catch(e){}}
+const oDiffEl=document.getElementById('o_diff');
+Object.entries(DIFF).forEach(([k,v])=>{const c=document.createElement('button');c.className='chip'+(k===oDiff?' on':'');c.textContent=v;
+  c.onclick=()=>{oDiff=k;[...oDiffEl.children].forEach(x=>x.classList.toggle('on',x===c))};oDiffEl.appendChild(c)});
+function tagFor(pts,kind){return kind||(pts>=50?'hard':pts>=25?'medium':'easy')}
+function earned(){return O.list.filter(o=>o.done).reduce((a,o)=>a+o.pts,0)}
+function renderO(){
+  document.getElementById('o_season').textContent='Season '+O.season;
+  document.getElementById('o_total').textContent=O.total+earned();
+  const done=O.list.filter(o=>o.done).length, max=O.list.reduce((a,o)=>a+o.pts,0);
+  document.getElementById('o_count').textContent=O.list.length?`${done}/${O.list.length} complete · ${earned()}/${max} pts`:'No objectives yet. Draw some below.';
+  document.getElementById('o_prog').style.width=(max?earned()/max*100:0)+'%';
+  document.getElementById('o_list').innerHTML=O.list.map((o,i)=>`
+    <div class="obj${o.done?' done':''}">
+      <input type="checkbox" data-i="${i}" ${o.done?'checked':''}>
+      <div><div class="ot">${esc(o.text)}</div><span class="tag t-${o.kind}">${o.kind}</span></div>
+      <div class="op">+${o.pts}<button data-x="${i}">remove</button></div>
+    </div>`).join('');
+  document.querySelectorAll('#o_list input').forEach(c=>c.onchange=()=>{O.list[c.dataset.i].done=c.checked;saveO();renderO()});
+  document.querySelectorAll('#o_list [data-x]').forEach(b=>b.onclick=()=>{O.list.splice(b.dataset.x,1);saveO();renderO()});
+  document.getElementById('o_hist').innerHTML=O.history.length?O.history.slice().reverse().map(h=>`
+    <div class="hist"><div><b>Season ${h.season}</b>${h.club?' · '+esc(h.club):''}<div class="meta">${h.done}/${h.count} objectives · ${h.pts} pts</div></div><div class="grade">${h.grade}</div></div>`).join(''):'<div class="note">No finished seasons yet.</div>';
+}
+function oMsg(t){const m=document.getElementById('o_msg');m.textContent=t;setTimeout(()=>{if(m.textContent===t)m.textContent=''},3500)}
+document.getElementById('o_draw').onclick=()=>{
+  const have=new Set(O.list.map(o=>o.text));
+  let pick=[];
+  const take=(kind,n)=>{const a=POOL[kind].filter(x=>!have.has(x[0])&&!pick.some(p=>p.text===x[0])).sort(()=>Math.random()-.5).slice(0,n);a.forEach(([text,pts])=>pick.push({text,pts,kind,done:false}))};
+  if(oDiff==='mixed'){take('easy',2);take('medium',2);take('hard',1)}else take(oDiff,5);
+  if(!pick.length){oMsg('No new ones left in that pool.');return}
+  if(oDiff!=='mixed'&&pick.length<5)take('fun',5-pick.length);
+  O.list.push(...pick);saveO();renderO();oMsg(`Added ${pick.length} objectives.`);
+};
+document.getElementById('o_add').onclick=()=>{
+  const t=document.getElementById('o_custom').value.trim();if(!t)return;
+  const pts=+document.getElementById('o_custompts').value;
+  O.list.push({text:t,pts,kind:tagFor(pts),done:false});document.getElementById('o_custom').value='';saveO();renderO();
+};
+document.getElementById('o_ai').onclick=async()=>{
+  if(!aiReady()){oMsg('Add your free Gemini key in My Club to use this.');return}
+  const b=document.getElementById('o_ai');b.disabled=true;b.textContent='Assistant is thinking...';
+  const c=club();
+  const prompt=`You set season objectives for an EA Sports FC 26 Career Mode save. Club: ${c.club||'unknown'}. Season: ${O.season}. Budget: ${c.budget||'unknown'}. Board goal: ${c.goal||'unknown'}. Style: ${c.style}. Squad notes: ${c.notes||'none'}. Difficulty wanted: ${DIFF[oDiff]}.
+Previous seasons: ${O.history.map(h=>`S${h.season} ${h.pts}pts grade ${h.grade}`).join(', ')||'none'}.
+Create 5 objectives that fit this club's level: specific, measurable inside the game, and fun (mix league, cups, transfers, youth development, and one quirky challenge). Points: 10 easy, 25 medium, 50 hard.
+Reply with ONLY a JSON array, no other text: [{"text":"...","pts":25,"kind":"easy|medium|hard|fun"}]`;
+  try{
+    const text=await askAI('You are a football career mode objectives generator. Output only valid JSON.',[{role:'user',text:prompt}]);
+    const m=text.match(/\[[\s\S]*\]/);const arr=JSON.parse(m?m[0]:text);
+    const add=arr.filter(x=>x&&x.text).slice(0,6).map(x=>{const pts=[10,25,50].includes(+x.pts)?+x.pts:25;return{text:String(x.text),pts,kind:['easy','medium','hard','fun'].includes(x.kind)?x.kind:tagFor(pts),done:false}});
+    O.list.push(...add);saveO();renderO();oMsg(`The assistant set ${add.length} objectives.`);
+  }catch(e){ oMsg(aiError(e)); }
+  b.disabled=false;b.textContent='Let the assistant set objectives for my club';
+};
+let endArmed=false;
+document.getElementById('o_end').onclick=()=>{
+  const b=document.getElementById('o_end');
+  if(!endArmed){endArmed=true;b.textContent='Tap again to confirm';setTimeout(()=>{endArmed=false;b.textContent='🏁 End season and start the next one'},3000);return}
+  endArmed=false;b.textContent='🏁 End season and start the next one';
+  const max=O.list.reduce((a,o)=>a+o.pts,0),pts=earned(),pct=max?pts/max:0;
+  const grade=!O.list.length?'—':pct>=.9?'A+':pct>=.75?'A':pct>=.6?'B':pct>=.4?'C':pct>=.2?'D':'F';
+  O.history.push({season:O.season,club:club().club,count:O.list.length,done:O.list.filter(o=>o.done).length,pts,grade});
+  O.total+=pts;O.season++;O.list=[];saveO();renderO();window.scrollTo(0,0);
+  oMsg(`Season graded ${grade}. On to Season ${O.season}!`);
+};
+renderO();
+
+// ---------- AI ENGINE ----------
+// Inside Claude: uses Claude. Installed app / GitHub Pages: uses the user's free Gemini key.
+let sample=null, claudeImages=false, busy=false, history=[], pending=[];
+const chat=document.getElementById('chat'), thumbs=document.getElementById('thumbs');
+const MODELS=['gemini-flash-latest','gemini-2.5-flash','gemini-flash-lite-latest','gemini-2.5-flash-lite'];
+function gkey(){try{return store()?.getItem('gaffer_gemini')||''}catch(e){return ''}}
+function setKey(k){try{k?store()?.setItem('gaffer_gemini',k):store()?.removeItem('gaffer_gemini')}catch(e){}}
+function aiReady(){return !!sample||!!gkey()}
+function aiError(e){
+  const c=e&&e.code;
+  if(c==='no_key')return 'Add your free Gemini key in My Club first.';
+  if(c==='bad_key')return 'Your Gemini key was rejected. Check it in My Club and paste it again.';
+  if(c==='rate_limited')return 'Daily or per-minute free limit reached. Give it a minute (or try again tomorrow), boss.';
+  if(c==='not_granted')return 'Allow the page to ask Claude, then try again.';
+  if(c==='offline')return 'No internet connection. The assistant needs internet; the other tabs work offline.';
+  return 'Something went wrong'+(e&&e.message?': '+e.message:'')+'. Try again.';
+}
+function shrink(file){ // resize big screenshots so they upload fast and use less of the free quota
+  return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{
+    const max=1600,sc=Math.min(1,max/Math.max(img.width,img.height));
+    const cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
+    cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+    res(cv.toDataURL('image/jpeg',0.85).split(',')[1]);URL.revokeObjectURL(img.src)};
+    img.onerror=rej;img.src=URL.createObjectURL(file)});
+}
+async function gemini(system,turns){
+  const key=gkey(); if(!key)throw{code:'no_key'};
+  if(!navigator.onLine)throw{code:'offline'};
+  const contents=[];
+  for(const t of turns){
+    const parts=[];
+    for(const f of (t.images||[]))parts.push({inline_data:{mime_type:'image/jpeg',data:await shrink(f)}});
+    parts.push({text:t.text});
+    contents.push({role:t.role==='assistant'?'model':'user',parts});
+  }
+  let last={code:'error'};
+  for(const m of MODELS){
+    let r,j;
+    try{
+      r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`,{method:'POST',
+        headers:{'Content-Type':'application/json','x-goog-api-key':key},
+        body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents,generationConfig:{temperature:0.7}})});
+      j=await r.json().catch(()=>({}));
+    }catch(e){throw{code:navigator.onLine?'error':'offline',message:'network error'}}
+    if(r.ok){
+      const text=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();
+      if(text)return text;
+      last={code:'error',message:j.promptFeedback?.blockReason||'empty answer'};continue;
+    }
+    const msg=j.error?.message||('HTTP '+r.status);
+    if(r.status===401||r.status===403||/API key/i.test(msg))throw{code:'bad_key',message:msg};
+    last={code:r.status===429?'rate_limited':'error',message:msg};
+    if(r.status===404||r.status===429||r.status>=500)continue; // try the next free model
+    throw last;
+  }
+  throw last;
+}
+async function askAI(system,turns,onText){
+  if(sample){ // running inside Claude
+    const msgs=turns.map((t,i)=>({role:t.role==='assistant'?'assistant':'user',content:(i===0?system+'\n\n---\n\n':'')+t.text}));
+    const opts={cache:false,modelTier:'default'};if(onText)opts.onText=({text})=>onText(text);
+    const imgs=claudeImages?(turns[turns.length-1].images||[]):[];if(imgs.length)opts.images=imgs;
+    return (await sample(msgs,opts)).text;
+  }
+  return gemini(system,turns);
+}
+function refreshAI(){
+  document.getElementById('keyCard').style.display=aiReady()?'none':'block';
+  const st=document.getElementById('k_status');
+  if(st)st.textContent=sample?'Running on Claude (inside Claude). No key needed here.':gkey()?'✓ Gemini key saved on this phone ('+gkey().slice(0,6)+'…)':'No key yet. The assistant is off.';
+}
+(async()=>{
+  try{ sample=await claude.use("sample"); }catch(e){ sample=null; }
+  if(sample){ try{ claudeImages=!!(await sample.limits()).images; }catch(e){} }
+  refreshAI();
+})();
+refreshAI();
+
+async function saveKey(inputId,msgId){
+  const k=document.getElementById(inputId).value.trim(), m=document.getElementById(msgId);
+  if(!k){m.textContent='Paste your key first.';return}
+  setKey(k);m.textContent='Testing key...';
+  try{await gemini('Reply with one word.',[{role:'user',text:'Say OK'}]);m.textContent='✓ Key works. The assistant is switched on.';document.getElementById(inputId).value='';}
+  catch(e){ if(e.code==='bad_key'){setKey('');m.textContent='That key didn\'t work. Copy it again from Google AI Studio.'} else m.textContent='Key saved. ('+aiError(e)+')'; }
+  refreshAI();
+}
+document.getElementById('k_save').onclick=()=>saveKey('k_input','k_msg');
+document.getElementById('k_save2').onclick=()=>saveKey('k_input2','k_msg2');
+document.getElementById('k_remove').onclick=()=>{setKey('');document.getElementById('k_msg2').textContent='Key removed from this phone.';refreshAI()};
+
+// ---------- ASSISTANT CHAT ----------
+document.getElementById('file').onchange=e=>{
+  [...e.target.files].slice(0,4-pending.length).forEach(f=>pending.push(f));
+  e.target.value='';drawThumbs();
+};
+function drawThumbs(){
+  thumbs.innerHTML='';
+  pending.forEach((f,i)=>{const d=document.createElement('div');const im=document.createElement('img');im.src=URL.createObjectURL(f);
+    const x=document.createElement('button');x.textContent='×';x.onclick=()=>{pending.splice(i,1);drawThumbs()};d.append(im,x);thumbs.appendChild(d)});
+}
+document.querySelectorAll('#quick button').forEach(b=>b.onclick=()=>{const q=document.getElementById('q');q.value=b.textContent+(q.value?'. '+q.value:'');q.focus()});
+document.getElementById('clear').onclick=()=>{history=[];chat.innerHTML='';addMsg('ai','Fresh start, boss. What do you need?');};
+
+function addMsg(who,text,imgs){
+  const m=document.createElement('div');m.className='msg '+who;
+  if(who==='ai'){const w=document.createElement('div');w.className='who';w.textContent='Assistant Manager';m.appendChild(w)}
+  (imgs||[]).forEach(f=>{const im=document.createElement('img');im.src=URL.createObjectURL(f);m.appendChild(im)});
+  const t=document.createElement('div');t.textContent=text;m.appendChild(t);
+  chat.appendChild(m);m.scrollIntoView({behavior:'smooth',block:'end'});return t;
+}
+
+function systemPrompt(){
+  const c=club();
+  const scout=P.map(p=>`${p.name} | ${p.pos} | ${p.club} | age ${p.age} | OVR ${p.ovr??'?'} | POT ${p.pot}`).join('\n');
+  return `You are the assistant manager in the user's EA Sports FC 26 Career Mode save. Talk like a sharp, friendly football coach ("boss"). Be practical and specific: name players, positions, prices and tactics. Keep answers short enough to read on a phone: a quick verdict, then 3-6 bullet points with clear actions. Use plain text with "-" bullets, no markdown headings.
+
+If screenshots are attached, read them carefully (player names, ratings, positions, ages, values, wages, form, league table, match stats) and base your advice on what you see. If something in the image is unreadable, say so.
+
+When recommending signings, prefer realistic targets for the club's budget and level. You may use this scouting list of FC 26 launch ratings, and you may suggest other players you know from FC 26, but say when you are unsure of a player's exact rating or price, since values change in-game.
+
+THE USER'S SAVE:
+Club: ${c.club||'not given'}
+Season: ${c.season||'not given'}
+Transfer budget: ${c.budget||'not given'}
+Wage budget: ${c.wage||'not given'}
+Formation: ${c.form||'not given'}
+Board goal: ${c.goal||'not given'}
+Preferred style: ${c.style}
+Squad notes: ${c.notes||'none'}
+Season objectives (season ${O.season}): ${O.list.map(o=>(o.done?'[done] ':'')+o.text).join('; ')||'none set'}
+When useful, tie your advice to these objectives.
+
+SCOUTING LIST (name | pos | club | age | OVR | POT):
+${scout}`;
+}
+
+document.getElementById('send').onclick=async()=>{
+  if(busy)return;
+  const qEl=document.getElementById('q');let q=qEl.value.trim();
+  if(!q&&!pending.length)return;
+  if(!aiReady()){refreshAI();document.getElementById('keyCard').scrollIntoView({behavior:'smooth'});return;}
+  if(!q)q='Look at these screenshots and give me your assessment and what I should do next.';
+  const canSee=!sample||claudeImages;
+  const imgs=canSee?pending.slice():[];
+  addMsg('me',q,imgs);
+  if(pending.length&&!canSee)addMsg('ai','I can\'t see images in this view, boss. Type out the key details and I\'ll work with that.');
+  pending=[];drawThumbs();qEl.value='';
+  busy=true;const btn=document.getElementById('send');btn.disabled=true;btn.textContent='Thinking...';
+  const out=addMsg('ai','Thinking...');
+  const turn={role:'user',text:(imgs.length?`[${imgs.length} screenshot(s) attached]\n`:'')+q,images:imgs};
+  try{
+    const text=await askAI(systemPrompt(),[...history,turn],t=>{out.textContent=t});
+    out.textContent=text;
+    history=[...history,{role:'user',text:turn.text},{role:'assistant',text}].slice(-12);
+  }catch(e){ out.textContent=aiError(e); }
+  busy=false;btn.disabled=false;btn.textContent='Ask the assistant';
+};
+</script>
+<script>
+if('serviceWorker' in navigator && location.protocol==='https:' && !location.hostname.endsWith('claude.ai')){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
